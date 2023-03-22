@@ -1,6 +1,6 @@
-# dp-nlp-category-api
+# bonn-py
 
-NLP Category-Matching API
+NLP Category-Matching tools
 
 A Rust microservice to match queries on the ONS Website to groupings in the ONS taxonomy
 

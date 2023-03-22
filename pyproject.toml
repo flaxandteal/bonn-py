@@ -1,10 +1,10 @@
 # Core package
 
 [project]
-name = "ff_fasttext"
-version = "0.0.1"
+name = "bonn"
+version = "0.0.2"
 description = "Created for ONS. Proof-of-concept mmap'd Rust word2vec implementation linked with category matching"
-license = { "file" = "LICENSE.md" }
+license = { "file" = "LICENSE" }
 authors = [
     { "name" = "Chris Nixon", "email" = "chris.nixon@flaxandteal.co.uk" },
     { "name" = "Phil Weir", "email" = "phil.weir@flaxandteal.co.uk" }
