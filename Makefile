@@ -3,10 +3,6 @@ MAIN=build-dev
 
 BUILD=build
 
-CONTAINER_IMAGE=registry.gitlab.com/flaxandteal/onyx/bonn_poc:build-481688189
-IMAGE_LATEST_TAG=registry.gitlab.com/flaxandteal/onyx/bonn_poc:latest
-IMAGE_SHA_TAG=registry.gitlab.com/flaxandteal/onyx/bonn_poc:0321b497
-
 GREEN  := $(shell tput -Txterm setaf 2)
 YELLOW := $(shell tput -Txterm setaf 3)
 WHITE  := $(shell tput -Txterm setaf 7)
@@ -19,8 +15,8 @@ all: build
 .PHONY: build
 build: Dockerfile
 	@mkdir -p $(BUILD)/wheels
-	docker build -t bonn_build -f Dockerfile .
-	docker run --rm --entrypoint maturin -v $(shell pwd)/$(BUILD)/wheels:/app/build/target/wheels bonn_build build
+	docker build -t bonn_py_build -f Dockerfile .
+	docker run --platform "linux/amd64" --entrypoint maturin -v $(shell pwd)/$(BUILD)/wheels:/app/build/target/wheels bonn_py_build build
 
 Dockerfile:
 	m4 Dockerfile.in > Dockerfile
