@@ -2,9 +2,9 @@
 
 [project]
 name = "bonn"
-version = "0.0.2"
+version = "0.1.0"
 description = "Created for ONS. Proof-of-concept mmap'd Rust word2vec implementation linked with category matching"
-license = { "file" = "LICENSE" }
+license = { "file" = "LICENSE.md" }
 authors = [
     { "name" = "Chris Nixon", "email" = "chris.nixon@flaxandteal.co.uk" },
     { "name" = "Phil Weir", "email" = "phil.weir@flaxandteal.co.uk" }
