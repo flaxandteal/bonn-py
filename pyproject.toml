@@ -1,9 +1,12 @@
-# Core package
+[build-system]
+requires = ["maturin>=0.12,<0.13"]
+build-backend = "maturin"
 
 [project]
 name = "bonn"
 version = "0.1.0"
 description = "Created for ONS. Proof-of-concept mmap'd Rust word2vec implementation linked with category matching"
+readme = "README.md"
 license = { "file" = "LICENSE.md" }
 authors = [
     { "name" = "Chris Nixon", "email" = "chris.nixon@flaxandteal.co.uk" },
@@ -18,7 +21,8 @@ dependencies = [
     "finalfusion",
     "dynaconf"
 ]
-
-[build-system]
-requires = ["maturin>=0.12,<0.13"]
-build-backend = "maturin"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
