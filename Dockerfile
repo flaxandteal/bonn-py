@@ -15,6 +15,7 @@ RUN yum install -y lapack-devel atlas-devel openblas-devel
 COPY Cargo.lock /app/build
 COPY Cargo.toml /app/build
 COPY LICENSE.md /app/build
+COPY README.md /app/build
 
 RUN RUSTFLAGS="-L /usr/lib64/atlas -C link-args=-lsatlas -ltatlas -llapack" cargo install finalfusion-utils --features=opq
 
