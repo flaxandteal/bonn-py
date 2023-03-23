@@ -3,9 +3,9 @@ MAIN=build-dev
 
 BUILD=build
 
-CONTAINER_IMAGE=registry.gitlab.com/flaxandteal/onyx/ff_fasttext_poc:build-481688189
-IMAGE_LATEST_TAG=registry.gitlab.com/flaxandteal/onyx/ff_fasttext_poc:latest
-IMAGE_SHA_TAG=registry.gitlab.com/flaxandteal/onyx/ff_fasttext_poc:0321b497
+CONTAINER_IMAGE=registry.gitlab.com/flaxandteal/onyx/bonn_poc:build-481688189
+IMAGE_LATEST_TAG=registry.gitlab.com/flaxandteal/onyx/bonn_poc:latest
+IMAGE_SHA_TAG=registry.gitlab.com/flaxandteal/onyx/bonn_poc:0321b497
 
 GREEN  := $(shell tput -Txterm setaf 2)
 YELLOW := $(shell tput -Txterm setaf 3)
@@ -14,21 +14,13 @@ CYAN   := $(shell tput -Txterm setaf 6)
 RESET  := $(shell tput -Txterm sgr0)
 
 .PHONY: all
-all: build-dev
-
-.PHONY: wheels
-wheels:
-	@mkdir -p $(BUILD)/wheels
-	docker build -t ff_fasttext_build -f Dockerfile.wheels .
-	docker run --rm --entrypoint maturin -v $(shell pwd)/$(BUILD)/wheels:/app/build/target/wheels ff_fasttext_build build
+all: build
 
 .PHONY: build
 build: Dockerfile
-	docker build -t ${CONTAINER_IMAGE} -t ${IMAGE_LATEST_TAG} -t ${IMAGE_SHA_TAG} .
-
-.PHONY: build-dev
-build-dev: Dockerfile
-	docker-compose build
+	@mkdir -p $(BUILD)/wheels
+	docker build -t bonn_build -f Dockerfile .
+	docker run --rm --entrypoint maturin -v $(shell pwd)/$(BUILD)/wheels:/app/build/target/wheels bonn_build build
 
 Dockerfile:
 	m4 Dockerfile.in > Dockerfile

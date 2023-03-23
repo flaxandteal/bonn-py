@@ -102,7 +102,7 @@ fn build_model(input_path: String, output_path: String) -> PyResult<()> {
 }
 
 #[pymodule]
-fn ff_fasttext(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn bonn(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<FfModel>()?;
     m.add_function(wrap_pyfunction!(build_model, m)?)?;
 

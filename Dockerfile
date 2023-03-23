@@ -3,23 +3,23 @@
 
 ## STAGE 1 - Core package(s)
 
-FROM konstin2/maturin as maturin
+FROM ghcr.io/pyo3/maturin:main as maturin
 
-RUN mkdir -p /app/build/ff_fasttext
+RUN mkdir -p /app/build/bonn
 WORKDIR /app/build/test_data
 # RUN curl -L -O "...wiki/wiki.en.fifu"
 WORKDIR /app/build
 
-RUN yum install -y lapack-devel atlas-devel
+RUN yum install -y lapack-devel atlas-devel openblas-devel
 
 COPY Cargo.lock /app/build
 COPY Cargo.toml /app/build
 COPY LICENSE.md /app/build
 
-RUN RUSTFLAGS="-L /usr/lib64/atlas -C link-args=-lcblas -llapack" cargo install finalfusion-utils --features=opq
+RUN RUSTFLAGS="-L /usr/lib64/atlas -C link-args=-lsatlas -ltatlas -llapack" cargo install finalfusion-utils --features=opq
 
 COPY pyproject.toml /app/build
 COPY src /app/build/src
-COPY ff_fasttext /app/build/ff_fasttext
+COPY bonn /app/build/bonn
 
 WORKDIR /app/build

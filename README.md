@@ -63,7 +63,7 @@ exit
 #### Run
 
 ```bash
-poetry run python -c "from ff_fasttext import FfModel; FfModel('test_data/wiki.en.fifu').eval('Hello')"
+poetry run python -c "from bonn import FfModel; FfModel('test_data/wiki.en.fifu').eval('Hello')"
 ```
 
 ### Algorithm

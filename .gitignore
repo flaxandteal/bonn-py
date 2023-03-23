@@ -1,6 +1,6 @@
 /target
 /core/target
-/core/ff_fasttext/*.so
+/core/bonn/*.so
 __pycache__
 *.egg-info
 Dockerfile
