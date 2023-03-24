@@ -16,7 +16,7 @@ all: build
 build: Dockerfile
 	@mkdir -p $(BUILD)/wheels
 	docker build -t bonn_py_build -f Dockerfile .
-	docker run --platform "linux/amd64" --entrypoint maturin -v $(shell pwd)/$(BUILD)/wheels:/app/build/target/wheels bonn_py_build build
+	docker run --platform "linux/amd64" --entrypoint maturin -v $(shell pwd)/$(BUILD)/wheels:/app/build/target/wheels bonn_py_build build --find-interpreter
 
 Dockerfile:
 	m4 Dockerfile.in > Dockerfile
