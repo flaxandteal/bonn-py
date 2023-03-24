@@ -8,6 +8,7 @@ version = "0.1.1"
 description = "Created for ONS. Proof-of-concept mmap'd Rust word2vec implementation linked with category matching"
 readme = "README.md"
 license = { "file" = "LICENSE.md" }
+requires-python = ">=3.6"
 authors = [
     { "name" = "Chris Nixon", "email" = "chris.nixon@flaxandteal.co.uk" },
     { "name" = "Phil Weir", "email" = "phil.weir@flaxandteal.co.uk" }
