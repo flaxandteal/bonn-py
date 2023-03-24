@@ -12,6 +12,7 @@ authors = [
     { "name" = "Chris Nixon", "email" = "chris.nixon@flaxandteal.co.uk" },
     { "name" = "Phil Weir", "email" = "phil.weir@flaxandteal.co.uk" }
 ]
+requires_python = ">=3.7,<3.10"
 dependencies = [
     "nltk~=3.7",
     "sortedcontainers~=2.4.0",
