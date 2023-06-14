@@ -135,7 +135,7 @@ def append_discovered_terms_from_elasticsearch(cm, classifier_bow):
     return all_words
 
 
-def load(model_file):
+def load(model_file, taxonomy_location):
     model = FfModel(model_file)
     # Import and download stopwords from NLTK.
     download("stopwords")  # Download stopwords list.
@@ -144,7 +144,7 @@ def load(model_file):
 
     category_manager = CategoryManager(model)
 
-    taxonomy = get_taxonomy()
+    taxonomy = get_taxonomy(taxonomy_location)
     categories = taxonomy_to_categories(taxonomy)
 
     if CACHE_TARGET and os.path.isfile(CACHE_TARGET) and not REBUILD_CACHE:

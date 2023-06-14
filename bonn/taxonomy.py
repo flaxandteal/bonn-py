@@ -5,10 +5,7 @@ import numpy as np
 from .settings import settings
 
 
-def get_taxonomy():
-    taxonomy_location = settings.get(
-        "TAXONOMY_LOCATION", "/app/test_data/taxonomy.json"
-    )
+def get_taxonomy(taxonomy_location):
     with open(taxonomy_location, "r") as f:
         taxonomy = json.load(f)
     return taxonomy
