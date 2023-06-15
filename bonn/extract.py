@@ -9,26 +9,23 @@ from nltk import download
 from tqdm import tqdm
 from nltk.stem.wordnet import WordNetLemmatizer
 
-from .settings import settings
 from bonn import FfModel
 from .category_manager import CategoryManager
 from .taxonomy import get_taxonomy, taxonomy_to_categories, categories_to_classifier_bow
 
-APPEARANCE_THRESHOLD = settings.get("APPEARANCE_THRESHOLD", 5)
-UPPER_APPEARANCE_THRESHOLD = settings.get("UPPER_APPEARANCE_THRESHOLD", 10)
-HOST = settings.get(
-    "ELASTICSEARCH_HOST",
-    os.getenv("ELASTICSEARCH_HOST", "http://elasticsearch-master:9200"),
-)
-ELASTICSEARCH_INDEX = settings.get(
-    "ELASTICSEARCH_INDEX", os.getenv("ELASTICSEARCH_INDEX", "ons1639492069322")
-)
-CACHE_TARGET = settings.get("CACHE_TARGET", None)
-REBUILD_CACHE = settings.get("REBUILD_CACHE", False)
+DEFAULT_TAXONOMY_LOCATION = "/app/test_data/taxonomy.json"
 
 
-def get_datasets(cm, classifier_bow):
+def get_datasets(cm, classifier_bow, settings):
     ltzr = WordNetLemmatizer()
+    host = settings.get(
+        "ELASTICSEARCH_HOST",
+        os.getenv("ELASTICSEARCH_HOST", "http://elasticsearch-master:9200"),
+    )
+    elasticsearch_index = settings.get(
+        "ELASTICSEARCH_INDEX",
+        os.getenv("ELASTICSEARCH_INDEX", "ons1639492069322")
+    )
 
     classifier_bow_vec = {
         k: [cm._model[w[1]] for w in words] for k, words in classifier_bow.items()
@@ -36,9 +33,9 @@ def get_datasets(cm, classifier_bow):
     datasets = {}
     # results_df = pd.DataFrame((d.to_dict() for d in s.scan()))
     # /businesseconomy../business/activitiespeopel/123745
-    client = Elasticsearch([HOST])
+    client = Elasticsearch([host])
 
-    s = Search(using=client, index=ELASTICSEARCH_INDEX).filter(
+    s = Search(using=client, index=elasticsearch_index).filter(
         "bool", must=[Q("exists", field="description.title")]
     )
     expecting = s.count()
@@ -83,7 +80,7 @@ def get_datasets(cm, classifier_bow):
     return datasets, all_words
 
 
-def discover_terms(datasets, classifier_bow):
+def discover_terms(datasets, classifier_bow, settings):
     discovered_terms = {}
     # could do with lemmatizing
     for ds in datasets.values():
@@ -94,11 +91,13 @@ def discover_terms(datasets, classifier_bow):
             discovered_terms[ds["category"]] = Counter()
         discovered_terms[ds["category"]].update(set(ds["bow"]))
 
+    appearance_threshold = settings.get("APPEARANCE_THRESHOLD", 5)
+    upper_appearance_threshold = settings.get("UPPER_APPEARANCE_THRESHOLD", 10)
     discovered_terms = {
         k: [
             w
             for w, c in count.items()
-            if c > (APPEARANCE_THRESHOLD if len(k) > 2 else UPPER_APPEARANCE_THRESHOLD)
+            if c > (appearance_threshold if len(k) > 2 else upper_appearance_threshold)
         ]
         for k, count in discovered_terms.items()
     }
@@ -109,12 +108,9 @@ def discover_terms(datasets, classifier_bow):
             terms += [("WC", w) for w in discovered_terms[key[0:2]]]
 
 
-def save_to_cache(all_words, classifier_bow):
+def save_to_cache(cache_target, all_words, classifier_bow, settings):
     cached = {
-        "config": {
-            "APPEARANCE_THRESHOLD": APPEARANCE_THRESHOLD,
-            "UPPER_APPEARANCE_THRESHOLD": UPPER_APPEARANCE_THRESHOLD,
-        },
+        "config": dict(settings),
         "all-words": all_words,
         "classifier-bow": [
             ["|".join(key), [[c, v] for c, v in terms]]
@@ -122,10 +118,10 @@ def save_to_cache(all_words, classifier_bow):
         ],
     }
     try:
-        with open(CACHE_TARGET, "w") as cache_f:
+        with open(cache_target, "w") as cache_f:
             json.dump(cached, cache_f)
     except OSError:
-        logging.warning("Could not write cache to target %s", CACHE_TARGET)
+        logging.warning("Could not write cache to target %s", cache_target)
 
 
 def append_discovered_terms_from_elasticsearch(cm, classifier_bow):
@@ -135,20 +131,26 @@ def append_discovered_terms_from_elasticsearch(cm, classifier_bow):
     return all_words
 
 
-def load(model_file, taxonomy_location):
+def load(model_file, settings):
     model = FfModel(model_file)
     # Import and download stopwords from NLTK.
     download("stopwords")  # Download stopwords list.
     download("omw-1.4")  # Download lemma list.
     download("wordnet")  # Download lemma list.
 
-    category_manager = CategoryManager(model)
+    category_manager = CategoryManager(model, settings)
+    taxonomy_location = settings.get(
+        "TAXONOMY_LOCATION", DEFAULT_TAXONOMY_LOCATION
+    )
 
     taxonomy = get_taxonomy(taxonomy_location)
     categories = taxonomy_to_categories(taxonomy)
 
-    if CACHE_TARGET and os.path.isfile(CACHE_TARGET) and not REBUILD_CACHE:
-        with open(CACHE_TARGET, "r") as cache_f:
+    cache_target = settings.get("CACHE_TARGET", None)
+    rebuild_cache = settings.get("REBUILD_CACHE", False)
+
+    if cache_target and os.path.isfile(cache_target) and not rebuild_cache:
+        with open(cache_target, "r") as cache_f:
             cached = json.load(cache_f)
         classifier_bow = SortedDict(
             {
@@ -164,9 +166,13 @@ def load(model_file, taxonomy_location):
         all_words = append_discovered_terms_from_elasticsearch(
             category_manager, classifier_bow
         )
-        if CACHE_TARGET and (not os.path.exists(CACHE_TARGET) or REBUILD_CACHE):
-            save_to_cache(all_words, classifier_bow)
+        if cache_target and (not os.path.exists(cache_target) or rebuild_cache):
+            save_to_cache(cache_target, all_words, classifier_bow, settings)
 
     category_manager.add_categories_from_bow("onyxcats", classifier_bow)
 
     return category_manager
+
+if __name__ == "__main__":
+    from .settings import settings
+    load(settings["MODEL_FILE"], settings)
