@@ -5,19 +5,17 @@ from sortedcontainers import SortedDict
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 
-from .settings import settings
 from .utils import cosine_similarities
 
 re_ws = re.compile(r"\s+")
 re_num = re.compile(r"[^\w\s\']", flags=re.UNICODE)
-THRESHOLD = settings.get("CATEGORY_THRESHOLD", 0.1)
-WEIGHTING = settings.get("WEIGHTING", {"C": 2, "SC": 2, "SSC": 1, "WC": 3, "WSSC": 5})
+DEFAULT_THRESHOLD = 0.1
+DEFAULT_WEIGHTING = {"C": 2, "SC": 2, "SSC": 1, "WC": 3, "WSSC": 5}
 EXTRA_STOPWORDS = {
     "english": ["statistics", "data", "measure", "measures"],
     "welsh": [],
 }
-EXTRA_STOPWORDS.update(settings.get("EXTRA_STOPWORDS", {}))
-STOPWORDS_LANGUAGE = settings.get("STOPWORDS_LANGUAGE", "english")
+DEFAULT_STOPWORDS_LANGUAGE = "english"
 
 
 class WModel:
@@ -38,16 +36,17 @@ class Category:
     vector = None
     words = None
 
-    def __init__(self, key, bow, model):
+    def __init__(self, key, bow, model, weighting):
         self.key = key
         self.bow = bow
+        self._weighting = weighting
 
         self._set_vector(model)
         self._set_words()
 
     def _set_vector(self, model):
-        vector = np.mean([WEIGHTING[code] * model[w] for code, w in self.bow], axis=0)
-        self.vector = vector / sum([WEIGHTING[code] for code, _ in self.bow])
+        vector = np.mean([self._weighting[code] * model[w] for code, w in self.bow], axis=0)
+        self.vector = vector / sum([self._weighting[code] for code, _ in self.bow])
 
     def _set_words(self):
         self.words = [w for _, w in self.bow]
@@ -59,17 +58,25 @@ class CategoryManager:
     _classifier_bow = None
     _topic_vectors = None
 
-    def __init__(self, word_model):
+    def __init__(self, word_model, settings):
         self._categories = SortedDict()
         self._model = WModel(word_model)
+        stopwords_language = settings.get("STOPWORDS_LANGUAGE", DEFAULT_STOPWORDS_LANGUAGE)
+        extra_stopwords = (
+            settings
+                .get("EXTRA_STOPWORDS", {})
+                .get(stopwords_language, EXTRA_STOPWORDS[stopwords_language])
+        )
         self._stop_words = (
-            stopwords.words(STOPWORDS_LANGUAGE) + EXTRA_STOPWORDS[STOPWORDS_LANGUAGE]
+            stopwords.words(stopwords_language) + extra_stopwords
         )
         self._significance = np.vectorize(
             self._significance_for_vector, signature="(m)->()"
         )
         self._ltzr = WordNetLemmatizer()
         self.all_words = {}
+        self._weighting = settings.get("WEIGHTING", DEFAULT_WEIGHTING)
+        self._threshold = settings.get("CATEGORY_THRESHOLD", DEFAULT_THRESHOLD)
 
     def set_all_words(self, all_words):
         total = sum(all_words.values())
@@ -86,7 +93,7 @@ class CategoryManager:
 
     def add_categories_from_bow(self, name, classifier_bow):
         self._categories[name] = SortedDict(
-            (k, Category(k, bow, self._model)) for k, bow in classifier_bow.items()
+            (k, Category(k, bow, self._model, self._weighting)) for k, bow in classifier_bow.items()
         )
 
     def closest(self, text, cat, classifier_bow_vec):
@@ -182,7 +189,7 @@ class CategoryManager:
             result = cosine_similarities(vec, topic_vectors)
             result = np.multiply(result, significance)
 
-            top = np.nonzero(result > THRESHOLD)[0]
+            top = np.nonzero(result > self._threshold)[0]
 
             tags.update({(result[i], categories.keys()[i]) for i in top})
 

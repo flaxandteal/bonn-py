@@ -1,6 +1,5 @@
 /target
-/core/target
-/core/bonn/*.so
+/bonn/*.so
 __pycache__
 *.egg-info
 Dockerfile
