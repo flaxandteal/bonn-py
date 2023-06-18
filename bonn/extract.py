@@ -124,9 +124,9 @@ def save_to_cache(cache_target, all_words, classifier_bow, settings):
         logging.warning("Could not write cache to target %s", cache_target)
 
 
-def append_discovered_terms_from_elasticsearch(cm, classifier_bow):
-    datasets, all_words = get_datasets(cm, classifier_bow)
-    discover_terms(datasets, classifier_bow)
+def append_discovered_terms_from_elasticsearch(cm, classifier_bow, settings):
+    datasets, all_words = get_datasets(cm, classifier_bow, settings)
+    discover_terms(datasets, classifier_bow, settings)
     cm.set_all_words(all_words)
     return all_words
 
@@ -164,7 +164,7 @@ def load(model_file, settings):
             category_manager.strip_document, categories
         )
         all_words = append_discovered_terms_from_elasticsearch(
-            category_manager, classifier_bow
+            category_manager, classifier_bow, settings
         )
         if cache_target and (not os.path.exists(cache_target) or rebuild_cache):
             save_to_cache(cache_target, all_words, classifier_bow, settings)
