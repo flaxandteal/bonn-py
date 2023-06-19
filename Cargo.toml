@@ -2,8 +2,15 @@
 name = "bonn"
 version = "0.1.4"
 edition = "2021"
+license = "MIT"
+description = "Flexible word2vec category matching."
+readme = "README.md"
+repository = "https://github.com/flaxandteal/bonn-py"
+keywords = ["nlp", "search"]
+categories = ["text-processing"]
 
 [lib]
+name = "_bonn"
 crate-type = ["cdylib"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
