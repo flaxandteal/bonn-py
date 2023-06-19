@@ -16,7 +16,7 @@ def filter_by_snr(scored_list, snr):
     scored_list_sum = sum(s for s, _ in scored_list)
     scored_list_len = len(scored_list)
     return [
-        (s, l)
-        for s, l in scored_list
-        if _get_snr(s, scored_list_len, scored_list_sum) > snr
+        (score, item)
+        for score, item in scored_list
+        if _get_snr(score, scored_list_len, scored_list_sum) > snr
     ]

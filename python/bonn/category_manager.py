@@ -45,8 +45,12 @@ class Category:
         self._set_words()
 
     def _set_vector(self, model):
-        vector = np.mean([self._weighting[code] * model[w] for code, w in self.bow], axis=0)
-        self.vector = vector / sum([self._weighting[code] for code, _ in self.bow])
+        vector = np.mean([
+            self._weighting[code] * model[w] for code, w in self.bow
+        ], axis=0)
+        self.vector = vector / sum(
+            [self._weighting[code] for code, _ in self.bow]
+        )
 
     def _set_words(self):
         self.words = [w for _, w in self.bow]
@@ -61,7 +65,10 @@ class CategoryManager:
     def __init__(self, word_model, settings):
         self._categories = SortedDict()
         self._model = WModel(word_model)
-        stopwords_language = settings.get("STOPWORDS_LANGUAGE", DEFAULT_STOPWORDS_LANGUAGE)
+        stopwords_language = settings.get(
+            "STOPWORDS_LANGUAGE",
+            DEFAULT_STOPWORDS_LANGUAGE
+        )
         extra_stopwords = (
             settings
                 .get("EXTRA_STOPWORDS", {})
@@ -80,7 +87,8 @@ class CategoryManager:
 
     def set_all_words(self, all_words):
         total = sum(all_words.values())
-        scale = lambda c: 0.25 + math.exp(1000 * (1 - c) / total) * 0.75
+        def scale(c):
+            return 0.25 + math.exp(1000 * (1 - c) / total) * 0.75
         self.all_words = {w: scale(c) for w, c in all_words.items()}
 
     def _scale_by_frequency(self, word):
@@ -93,7 +101,8 @@ class CategoryManager:
 
     def add_categories_from_bow(self, name, classifier_bow):
         self._categories[name] = SortedDict(
-            (k, Category(k, bow, self._model, self._weighting)) for k, bow in classifier_bow.items()
+            (k, Category(k, bow, self._model, self._weighting))
+            for k, bow in classifier_bow.items()
         )
 
     def closest(self, text, cat, classifier_bow_vec):
@@ -139,7 +148,7 @@ class CategoryManager:
         if not clean:
             return []
 
-        classifiers = {w: WEIGHTING[code] * self._model[w] for code, w in cat.bow}
+        classifiers = {w: self._weighting[code] * self._model[w] for code, w in cat.bow}
 
         tags = {}
         for words in clean:
@@ -160,7 +169,7 @@ class CategoryManager:
             "tags": tags,
             "vector": np.linalg.norm(cat.vector),
             "significance": self._significance_for_vector(cat.vector),
-            "weightings": {w: WEIGHTING[code] for code, w in cat.bow},
+            "weightings": {w: self._weighting[code] for code, w in cat.bow},
         }
 
     @staticmethod

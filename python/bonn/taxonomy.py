@@ -1,6 +1,5 @@
 from sortedcontainers import SortedDict
 import json
-import numpy as np
 
 
 def get_taxonomy(taxonomy_location):

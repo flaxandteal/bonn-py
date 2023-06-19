@@ -9,7 +9,7 @@ from nltk import download
 from tqdm import tqdm
 from nltk.stem.wordnet import WordNetLemmatizer
 
-from bonn import FfModel
+from ._bonn import FfModel
 from .category_manager import CategoryManager
 from .taxonomy import get_taxonomy, taxonomy_to_categories, categories_to_classifier_bow
 
@@ -41,27 +41,27 @@ def get_datasets(cm, classifier_bow, settings):
     expecting = s.count()
     size = 50
     s = s.params(size=size)
-    n = 0
     all_words = Counter()
     with tqdm(total=expecting) as pbar:
         for hit in s.scan():
             try:
-                datasets[hit.description.title] = {
+                title = hit.description.title
+                datasets[title] = {
                     "category": tuple(hit.uri.split("/")[1:4]),
-                    "text": f"{hit.description.title} {hit.description.metaDescription}",
+                    "text": f"{title} {hit.description.metaDescription}",
                 }
-                cat = datasets[hit.description.title]["category"]
+                cat = datasets[title]["category"]
                 if cat not in classifier_bow_vec and cat[:-1] in classifier_bow_vec:
                     cat = cat[:-1]
-                    datasets[hit.description.title]["category"] = cat
+                    datasets[title]["category"] = cat
 
-                datasets[hit.description.title]["bow"] = cm.closest(
-                    datasets[hit.description.title]["text"], cat, classifier_bow_vec
+                datasets[title]["bow"] = cm.closest(
+                    datasets[title]["text"], cat, classifier_bow_vec
                 )
                 document = (
-                    hit.description.title
+                    title
                     + " "
-                    + datasets[hit.description.title]["text"]
+                    + datasets[title]["text"]
                 )
                 all_words.update(
                     {
@@ -69,10 +69,10 @@ def get_datasets(cm, classifier_bow, settings):
                         for v in set(sum(cm.strip_document(document), []))
                     }
                 )
-                datasets[hit.description.title]["bow"] = cm.closest(
+                datasets[title]["bow"] = cm.closest(
                     document, cat, classifier_bow_vec
                 )
-            except AttributeError as e:
+            except AttributeError:
                 pass
             pbar.update(1)
 
