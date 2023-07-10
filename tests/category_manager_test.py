@@ -2,10 +2,8 @@ import pytest
 from nltk import download
 from pathlib import Path
 from fastapi.testclient import TestClient
-from category_api.server import make_app
 from unittest.mock import MagicMock
 from bonn.extract import CategoryManager, FfModel
-from category_api.healthcheck import Healthcheck
 from dynaconf import Dynaconf
 
 def get_test_data(datafile):
@@ -38,3 +36,15 @@ def settings():
 
 def test_can_create_category_manager(category_manager):
     pass
+
+def test_can_add_categories(category_manager):
+    category_manager.add_categories_from_bow(
+        "cities",
+        {
+            "manchester": (("C", "manchester"),),
+            "cardiff": (("C", "cardiff"),),
+            "ealing": (("C", "ealing"),),
+            "underground": (("C", "underground"),),
+        }
+    )
+    print(category_manager.test("london", "cities"))
