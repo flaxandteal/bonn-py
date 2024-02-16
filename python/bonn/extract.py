@@ -3,7 +3,19 @@ import logging
 import json
 from sortedcontainers import SortedDict
 from collections import Counter
-from elasticsearch2 import Elasticsearch
+try:
+    from elasticsearch2 import Elasticsearch as Elasticsearch2
+except ImportError:
+    Elasticsearch2 = None
+
+ELASTICSEARCH = None
+try:
+    from elasticsearch import Elasticsearch
+    ELASTICSEARCH = Elasticsearch
+except ImportError as exc:
+    if not Elasticsearch2:
+        raise RuntimeError("elasticsearch or elasticsearch2 must be installed") from exc
+
 from elasticsearch_dsl import Search, Q
 from nltk import download
 from tqdm import tqdm
@@ -16,6 +28,26 @@ from .taxonomy import get_taxonomy, taxonomy_to_categories, categories_to_classi
 DEFAULT_TAXONOMY_LOCATION = "/app/test_data/taxonomy.json"
 
 
+def get_elasticsearch(settings):
+    elasticsearch_version = int(settings.get(
+        "ELASTICSEARCH_MAJOR_VERSION",
+        os.getenv("ELASTICSEARCH_MAJOR_VERSION", "7")
+    ))
+
+    elasticsearch = ELASTICSEARCH
+    if elasticsearch_version == 2:
+        if Elasticsearch2:
+            elasticsearch = Elasticsearch2
+        else:
+            raise RuntimeError(
+                "To use Elasticsearch 2.x, you must have elasticsearch_dsl~=2.0 and elasticsearch2 installed"
+            )
+
+    if elasticsearch is None:
+        raise RuntimeError("You must have a version of elasticsearch or elasticsearch2 installed")
+
+    return elasticsearch
+
 def get_datasets(cm, classifier_bow, settings):
     ltzr = WordNetLemmatizer()
     host = settings.get(
@@ -24,19 +56,19 @@ def get_datasets(cm, classifier_bow, settings):
     )
     elasticsearch_index = settings.get(
         "ELASTICSEARCH_INDEX",
-        os.getenv("ELASTICSEARCH_INDEX", "ons1639492069322")
+        os.getenv("ELASTICSEARCH_INDEX", "ons")
     )
-
     classifier_bow_vec = {
         k: [cm._model[w[1]] for w in words] for k, words in classifier_bow.items()
     }
     datasets = {}
     # results_df = pd.DataFrame((d.to_dict() for d in s.scan()))
     # /businesseconomy../business/activitiespeopel/123745
-    client = Elasticsearch([host])
+    elasticsearch = get_elasticsearch(settings)
+    client = ELASTICSEARCH([host])
 
     s = Search(using=client, index=elasticsearch_index).filter(
-        "bool", must=[Q("exists", field="description.title")]
+        "bool", must=[Q("exists", field="title")]
     )
     expecting = s.count()
     size = 50
@@ -45,10 +77,10 @@ def get_datasets(cm, classifier_bow, settings):
     with tqdm(total=expecting) as pbar:
         for hit in s.scan():
             try:
-                title = hit.description.title
+                title = hit.title
                 datasets[title] = {
                     "category": tuple(hit.uri.split("/")[1:4]),
-                    "text": f"{title} {hit.description.metaDescription}",
+                    "text": f"{title} {hit.meta_description}",
                 }
                 cat = datasets[title]["category"]
                 if cat not in classifier_bow_vec and cat[:-1] in classifier_bow_vec:
