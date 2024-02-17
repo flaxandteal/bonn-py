@@ -124,7 +124,7 @@ class CategoryManager:
         ]
 
     def strip_document(self, doc):
-        if type(doc) is list:
+        if isinstance(doc, list):
             doc = " ".join(doc)
 
         docs = doc.split(",")

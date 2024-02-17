@@ -1,8 +1,6 @@
 import pytest
 from nltk import download
 from pathlib import Path
-from fastapi.testclient import TestClient
-from unittest.mock import MagicMock
 from bonn.extract import CategoryManager, FfModel
 from dynaconf import Dynaconf
 
