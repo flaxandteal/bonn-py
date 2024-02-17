@@ -3,6 +3,16 @@ import logging
 import json
 from sortedcontainers import SortedDict
 from collections import Counter
+
+from elasticsearch_dsl import Search, Q
+from nltk import download
+from tqdm import tqdm
+from nltk.stem.wordnet import WordNetLemmatizer
+
+from ._bonn import FfModel
+from .category_manager import CategoryManager
+from .taxonomy import get_taxonomy, taxonomy_to_categories, categories_to_classifier_bow
+
 try:
     from elasticsearch2 import Elasticsearch as Elasticsearch2
 except ImportError:
@@ -15,15 +25,6 @@ try:
 except ImportError as exc:
     if not Elasticsearch2:
         raise RuntimeError("elasticsearch or elasticsearch2 must be installed") from exc
-
-from elasticsearch_dsl import Search, Q
-from nltk import download
-from tqdm import tqdm
-from nltk.stem.wordnet import WordNetLemmatizer
-
-from ._bonn import FfModel
-from .category_manager import CategoryManager
-from .taxonomy import get_taxonomy, taxonomy_to_categories, categories_to_classifier_bow
 
 DEFAULT_TAXONOMY_LOCATION = "/app/test_data/taxonomy.json"
 
@@ -40,11 +41,14 @@ def get_elasticsearch(settings):
             elasticsearch = Elasticsearch2
         else:
             raise RuntimeError(
-                "To use Elasticsearch 2.x, you must have elasticsearch_dsl~=2.0 and elasticsearch2 installed"
+                "To use Elasticsearch 2.x, you must have elasticsearch_dsl~=2.0 "
+                "and elasticsearch2 installed"
             )
 
     if elasticsearch is None:
-        raise RuntimeError("You must have a version of elasticsearch or elasticsearch2 installed")
+        raise RuntimeError(
+            "You must have a version of elasticsearch or elasticsearch2 installed"
+        )
 
     return elasticsearch
 
@@ -65,7 +69,7 @@ def get_datasets(cm, classifier_bow, settings):
     # results_df = pd.DataFrame((d.to_dict() for d in s.scan()))
     # /businesseconomy../business/activitiespeopel/123745
     elasticsearch = get_elasticsearch(settings)
-    client = ELASTICSEARCH([host])
+    client = elasticsearch([host])
 
     s = Search(using=client, index=elasticsearch_index).filter(
         "bool", must=[Q("exists", field="title")]
