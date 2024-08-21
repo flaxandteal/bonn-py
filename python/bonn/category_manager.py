@@ -2,10 +2,12 @@ import numpy as np
 import math
 import re
 from sortedcontainers import SortedDict
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, wordnet
 from nltk.stem.wordnet import WordNetLemmatizer
 
 from .utils import cosine_similarities
+stopwords.ensure_loaded()
+wordnet.ensure_loaded()
 
 re_ws = re.compile(r"\s+")
 re_num = re.compile(r"[^\w\s\']", flags=re.UNICODE)
