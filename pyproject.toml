@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "bonn"
-version = "1.0.6"
+version = "1.0.7"
 description = "Created for ONS. Proof-of-concept mmap'd Rust word2vec implementation linked with category matching"
 readme = "README.md"
 license = { "file" = "LICENSE.md" }
@@ -29,5 +29,5 @@ classifiers = [
 ]
 
 [tool.maturin]
-python-source = ""
+python-source = "python"
 module-name = "bonn._bonn"
