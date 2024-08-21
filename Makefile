@@ -13,13 +13,10 @@ RESET  := $(shell tput -Txterm sgr0)
 all: build
 
 .PHONY: build
-build: Dockerfile
+build:
 	@mkdir -p $(BUILD)/wheels
 	docker build -t bonn_py_build -f Dockerfile .
 	docker run --platform "linux/amd64" --entrypoint maturin -v $(shell pwd)/$(BUILD)/wheels:/app/build/target/wheels bonn_py_build build --find-interpreter
-
-Dockerfile:
-	m4 Dockerfile.in > Dockerfile
 
 test_data/wiki.en.fifu:
 	curl -o test_data/wiki.en.fifu http://www.sfs.uni-tuebingen.de/a3-public-data/finalfusion-fasttext/wiki/wiki.en.fifu
